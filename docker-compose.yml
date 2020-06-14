@@ -10,13 +10,42 @@ services:
     command:
       - '--config.file=/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/data'
+    depends_on:
+      - alertmanager
     ports:
       - 9090:9090
     restart: always
   
-  grafana:
+  alertmanager:
+    image: prom/alertmanager
+    user: root
     restart: always
+    volumes:
+      - ./alertmanager:/alertmanager
+      - alertmanager-data:/data
+    command:
+      - '--config.file=/alertmanager/alertmanager.yml'
+      - '--storage.path=/data'
+    ports:
+      - 9093:9093
+  
+  #alertmanager-bot:
+  #  command:
+  #  - --alertmanager.url=http://alertmanager:9093
+  #  - --log.level=info
+  #  - --store=bolt
+  #  - --bolt.path=/data/bot.db
+  #  environment:
+  #    TELEGRAM_ADMIN: "1234"
+  #    TELEGRAM_TOKEN: XXXXXXX
+  #  image: metalmatze/alertmanager-bot:0.4.2
+  #  restart: always
+  #  volumes:
+  #  - alertmanager-bot-data:/data
+  
+  grafana:
     image: grafana/grafana
+    restart: always
     ports:
       - 3000:3000
     volumes:
@@ -25,6 +54,7 @@ services:
 
   cadvisor:
     image: google/cadvisor:latest
+    restart: always
     volumes:
     - /:/rootfs:ro
     - /var/run:/var/run:rw
@@ -33,5 +63,7 @@ services:
 
 volumes:
   prometheus-data:
+  alertmanager-data:
   grafana-data:
   grafana-provisioning:
+  alertmanager-bot-data:
