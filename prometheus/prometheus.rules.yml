@@ -1,68 +1,115 @@
 groups:
-    - name: ./rules.conf
-      rules:
-    
-      # heartbeat alert
-      - alert: Heartbeat
-        expr: vector(1)
-        labels:
-          severity: informational
-    
-      # service availability alert
-      - alert: service_down
-        expr: up == 0
-        labels:
-          service: Platform
-          severity: major
-          correlate: service_up,service_down
-        annotations:
-          description: Service {{ $labels.instance }} is unavailable.
-          value: DOWN ({{ $value }})
-          runbook: http://wiki.alerta.io/RunBook/{app}/Event/{alertname}
-    
-      - alert: service_up
-        expr: up == 1
-        labels:
-          service: Platform
-          severity: normal
-          correlate: service_up,service_down
-        annotations:
-          description: Service {{ $labels.instance }} is available.
-          value: UP ({{ $value }})
-    
-      # system load alert
-      - alert: high_load
-        expr: node_load1 > 0.5
-        annotations:
-          description: '{{ $labels.instance }} of job {{ $labels.job }} is under high load.'
-          summary: Instance {{ $labels.instance }} under high load
-          value: '{{ $value }}'
-    
-      # disk space alert (with resource=<instance>:<mountpoint> event=disk_space
-      - alert: disk_space
-        expr: (node_filesystem_size_bytes - node_filesystem_free_bytes) * 100 / node_filesystem_size_bytes > 5
-        labels:
-          instance: '{{ $labels.instance }}:{{ $labels.mountpoint }}'
-        annotations:
-          value: '{{ humanize $value }}%'
-    
-      # disk space alert (with resource=<instance> event=disk_util:<mountpoint>
-      - alert: disk_util
-        expr: (node_filesystem_size_bytes - node_filesystem_free_bytes) * 100 / node_filesystem_size_bytes > 5
-        labels:
-          instance: '{{ $labels.instance }}'
-          event: '{alertname}:{{ $labels.mountpoint }}'  # python templating rendered by Alerta
-        annotations:
-          value: '{{ humanize $value }}%'
-    
-      # API request rate alert
-      - alert: api_requests_high
-        expr: rate(alerta_alerts_queries_count{instance="alerta:8080",job="alerta"}[5m]) > 5
-        labels:
-          service: Alerta,Platform
-          severity: major
-        annotations:
-          description: API request rate of {{ $value | printf "%.1f" }} req/s is high (threshold 5 req/s)
-          summary: API request rate high
-          value: '{{ humanize $value }} req/s'
-    
+- name: Prometheus self-monitoring
+  rules:
+  - alert: PrometheusTargetMissing
+    expr: up == 0
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Prometheus target missing (instance {{ $labels.instance }})"
+      description: "A Prometheus target has disappeared. An exporter might be crashed.\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+  - alert: PrometheusTooManyRestarts
+    expr: changes(process_start_time_seconds{job=~"prometheus|pushgateway|alertmanager"}[15m]) > 2
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Prometheus too many restarts (instance {{ $labels.instance }})"
+      description: "Prometheus has restarted more than twice in the last 15 minutes. It might be crashlooping.\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+
+- name: Host and hardware
+  doc_url: https://github.com/prometheus/node_exporter
+  rules:
+  - alert: HostOutOfMemory
+    expr: node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes * 100 < 10
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Host out of memory (instance {{ $labels.instance }})"
+      description: "Node memory is filling up (< 10% left)\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+  - alert: HostUnusualNetworkThroughputIn
+    expr: sum by (instance) (irate(node_network_receive_bytes_total[2m])) / 1024 / 1024 > 100
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Host unusual network throughput in (instance {{ $labels.instance }})"
+      description: "Host network interfaces are probably receiving too much data (> 100 MB/s)\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+  - alert: HostUnusualNetworkThroughputOut
+    expr: sum by (instance) (irate(node_network_transmit_bytes_total[2m])) / 1024 / 1024 > 100
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Host unusual network throughput out (instance {{ $labels.instance }})"
+      description: "Host network interfaces are probably sending too much data (> 100 MB/s)\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+  - alert: HostOutOfDiskSpace
+    expr: (node_filesystem_avail_bytes{mountpoint="/rootfs"}  * 100) / node_filesystem_size_bytes{mountpoint="/rootfs"} < 10
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Host out of disk space (instance {{ $labels.instance }})"
+      description: "Disk is almost full (< 10% left)\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+  - alert: HostDiskWillFillIn4Hours
+    expr: predict_linear(node_filesystem_free_bytes{fstype!~"tmpfs"}[1h], 4 * 3600) < 0
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Host disk will fill in 4 hours (instance {{ $labels.instance }})"
+      description: "Disk will fill in 4 hours at current write rate\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+  - alert: HostHighCpuLoad
+    expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Host high CPU load (instance {{ $labels.instance }})"
+      description: "CPU load is > 80%\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+  - alert: HostPhysicalComponentTooHot
+    expr: node_hwmon_temp_celsius > 65
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Host physical component too hot (instance {{ $labels.instance }})"
+      description: "Physical hardware component too hot\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+  - alert: HostNodeOvertemperatureAlarm
+    expr: node_hwmon_temp_alarm == 1
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Host node overtemperature alarm (instance {{ $labels.instance }})"
+      description: "Physical node temperature alarm triggered\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+
+- name: Docker containers
+  doc_url: https://github.com/google/cadvisor
+  rules:
+  - alert: ContainerKilled
+    expr: time() - container_last_seen > 60
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Container killed (instance {{ $labels.instance }})"
+      description: "A container has disappeared\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+  - alert: ContainerCpuUsage
+    expr: (sum(rate(container_cpu_usage_seconds_total[3m])) BY (instance, name) * 100) > 80
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Container CPU usage (instance {{ $labels.instance }})"
+      description: "Container CPU usage is above 80%\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+  - alert: ContainerVolumeUsage
+    expr: (1 - (sum(container_fs_inodes_free) BY (instance) / sum(container_fs_inodes_total) BY (instance)) * 100) > 80
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Container Volume usage (instance {{ $labels.instance }})"
+      description: "Container Volume usage is above 80%\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"

@@ -33,13 +33,13 @@ services:
     image: metalmatze/alertmanager-bot:0.4.2
     restart: always
     command:
-    - --alertmanager.url=http://alertmanager:9093
     - --log.level=info
     - --store=bolt
     - --bolt.path=/data/bot.db
     environment:
-      TELEGRAM_ADMIN: "1063459390"
-      TELEGRAM_TOKEN: xxxxxxxx
+      ALERTMANAGER_URL: http://alertmanager:9093
+      TELEGRAM_ADMIN: xxx
+      TELEGRAM_TOKEN: xxx
     depends_on:
       - alertmanager
     volumes:
