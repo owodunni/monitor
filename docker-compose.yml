@@ -45,6 +45,16 @@ services:
     volumes:
     - alertmanager-bot-data:/data
   
+  blackbox_exporter:
+    image: prom/blackbox-exporter
+    ports:
+      - 9115:9115
+    dns: 8.8.8.8
+    restart: always
+    volumes:
+      - "./blackbox:/blackbox"
+    command: --config.file=/blackbox/blackbox.yml
+
   grafana:
     image: grafana/grafana
     restart: always
