@@ -59,6 +59,8 @@ services:
     volumes:
       - "./blackbox:/blackbox"
     command: --config.file=/blackbox/blackbox.yml
+    networks:
+      - core
 
   grafana:
     image: grafana/grafana
