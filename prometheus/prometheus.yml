@@ -51,4 +51,4 @@ scrape_configs:
   scheme: http
   static_configs:
   - targets:
-    - eth:6060
+    - eth2_eth:6060
