@@ -14,7 +14,8 @@ services:
       - alertmanager
     ports:
       - 9090:9090
-    restart: always
+    networks:
+      - core
   
   alertmanager:
     image: prom/alertmanager
@@ -28,6 +29,8 @@ services:
       - '--storage.path=/data'
     ports:
       - 9093:9093
+    networks:
+      - core
   
   alertmanager-bot:
     image: metalmatze/alertmanager-bot:0.4.2
@@ -44,6 +47,8 @@ services:
       - alertmanager
     volumes:
     - alertmanager-bot-data:/data
+    networks:
+      - core
   
   blackbox_exporter:
     image: prom/blackbox-exporter
@@ -63,6 +68,8 @@ services:
     volumes:
       - grafana-data:/var/lib/grafana
       - grafana-provisioning:/etc/grafana/provisioning/
+    networks:
+      - core
 
   cadvisor:
     image: google/cadvisor:latest
@@ -75,6 +82,8 @@ services:
     - /dev/disk/:/dev/disk:ro
     devices:
       - /dev/kmsg:/dev/kmsg
+    networks:
+      - core
 
 volumes:
   prometheus-data:
@@ -82,3 +91,7 @@ volumes:
   grafana-data:
   grafana-provisioning:
   alertmanager-bot-data:
+
+networks:
+  core:
+    external: true
