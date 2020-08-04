@@ -45,3 +45,10 @@ scrape_configs:
       target_label: instance
     - target_label: __address__
       replacement: blackbox_exporter:9115
+
+- job_name: eth2_eth
+  metrics_path: /eth
+  scheme: http
+  static_configs:
+  - targets:
+    - eth2_eth:6060
