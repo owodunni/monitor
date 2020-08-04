@@ -47,8 +47,8 @@ scrape_configs:
       replacement: blackbox_exporter:9115
 
 - job_name: eth2_eth
-  metrics_path: /eth
+  metrics_path: /debug/metrics/prometheus
   scheme: http
   static_configs:
   - targets:
-    - eth2_eth:6060
+    - eth:6060
