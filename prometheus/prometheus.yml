@@ -45,9 +45,19 @@ scrape_configs:
     - target_label: __address__
       replacement: blackbox_exporter:9115
 
-- job_name: eth2_eth
+- job_name: eth-node
   metrics_path: /debug/metrics/prometheus
   scheme: http
   static_configs:
   - targets:
     - eth-node:6060
+
+- job_name: beacon-node
+  static_configs:
+  - targets:
+    - beacon-node:8080
+
+- job_name: validator
+  static_configs:
+  - targets:
+    - validator:8081
