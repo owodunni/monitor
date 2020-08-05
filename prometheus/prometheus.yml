@@ -52,12 +52,8 @@ scrape_configs:
   - targets:
     - eth-node:6060
 
-- job_name: beacon-node
-  static_configs:
-  - targets:
-    - beacon-node:8080
-
-- job_name: validator
+- job_name: eth2
   static_configs:
   - targets:
     - validator:8081
+    - beacon-node:8080
