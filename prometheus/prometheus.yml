@@ -27,7 +27,6 @@ scrape_configs:
   static_configs:
     # gluteus and barracuda have been given hostnames by DHCP
     - targets: ['gluteus.owodunni.home:9100',
-                'barracuda.owodunni.home:9100',
                 'pfsense.owodunni.home:9100']
 
 - job_name: 'blackbox'
@@ -51,4 +50,4 @@ scrape_configs:
   scheme: http
   static_configs:
   - targets:
-    - eth2_eth:6060
+    - eth2_eth-node:6060
