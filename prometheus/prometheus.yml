@@ -25,7 +25,7 @@ scrape_configs:
 
 - job_name: 'node'
   static_configs:
-    # gluteus and barracuda have been given hostnames by DHCP
+    # gluteus and pfsense are given host name by dhcp
     - targets: ['gluteus.owodunni.home:9100',
                 'pfsense.owodunni.home:9100']
 
