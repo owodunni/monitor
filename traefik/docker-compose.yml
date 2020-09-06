@@ -1,0 +1,14 @@
+version: "3.3"
+
+services:
+  traefik:
+    image: "traefik:latest"
+    command:
+      - --entrypoints.web.address=:80
+      - --providers.docker=true
+      - --api.insecure
+    ports:
+      - "80:80"
+      - "7080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
