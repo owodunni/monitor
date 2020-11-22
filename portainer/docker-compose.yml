@@ -17,7 +17,7 @@ services:
       - agent_network
 
   portainer:
-    image: portainer/portainer
+    image: portainer/portainer-ce
     restart: always
     command: -H tcp://agent:9001 --tlsskipverify
     ports:
