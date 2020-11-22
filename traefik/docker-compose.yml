@@ -1,14 +1,19 @@
 version: "3.3"
 
 services:
-  traefik:
-    image: "traefik:latest"
-    command:
-      - --entrypoints.web.address=:80
-      - --providers.docker=true
-      - --api.insecure
-    ports:
-      - "80:80"
-      - "7080:8080"
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    traefik:
+      container_name: traefik
+      image: traefik:latest
+      restart: always
+      ports:
+        - 80:80
+        - 443:443
+      networks:
+        - traefik
+      volumes:
+        - ${CONTAINERPATH}/traefik:/etc/traefik
+        - ${CONTAINERPATH}/traefik/acme/acme.json:/acme.json
+        - ${CONTAINERPATH}/traefik/traefik.yml:/traefik.yml 
+        - ${CONTAINERPATH}/traefik/dynamic_config.yml:/config.yml:ro
+      environment:
+        - TZ=${TZ}

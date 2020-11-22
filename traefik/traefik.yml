@@ -1,0 +1,32 @@
+log:
+    level: DEBUG
+    filepath: "/etc/traefik/log/traefik.log"
+  api:
+    dashboard: true
+    insecure: false  
+    debug: true
+  entryPoints:
+    web:
+      address: ":80"
+    websecure:
+      address: ":443"
+  providers:
+    docker:
+      exposedByDefault: false
+      endpoint: "tcp://dockerproxy:2375"
+      network: "traefik"
+      defaultRule: "Host(`{{ trimPrefix `/` .Name }}.example.com`)"
+    file:
+      filename: "/etc/traefik/dynamic_config.yml"
+      watch: true
+  certificatesResolvers:
+    namecheap:
+      acme:
+        email: anyname@anymail.com
+        storage: "/etc/traefik/acme/acme.json"
+        dnsChallenge:
+          provider: namecheap
+          delayBeforeCheck: 120
+          resolvers:
+            - "1.1.1.1:53"
+            - "8.8.8.8:53"
