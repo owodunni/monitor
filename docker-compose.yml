@@ -1,4 +1,3 @@
-
 version: '3.8'
 services:
   prometheus:
@@ -31,35 +30,6 @@ services:
       - 9093:9093
     networks:
       - core
-  
-  alertmanager-bot:
-    image: metalmatze/alertmanager-bot:0.4.2
-    restart: always
-    command:
-    - --log.level=info
-    - --store=bolt
-    - --bolt.path=/data/bot.db
-    environment:
-      ALERTMANAGER_URL: http://alertmanager:9093
-      TELEGRAM_ADMIN: xxx
-      TELEGRAM_TOKEN: xxx
-    depends_on:
-      - alertmanager
-    volumes:
-    - alertmanager-bot-data:/data
-    networks:
-      - core
-  
-  blackbox_exporter:
-    image: prom/blackbox-exporter
-    ports:
-      - 9115:9115
-    restart: always
-    volumes:
-      - "./blackbox:/blackbox"
-    command: --config.file=/blackbox/blackbox.yml
-    networks:
-      - core
 
   grafana:
     image: grafana/grafana
@@ -72,26 +42,11 @@ services:
     networks:
       - core
 
-  cadvisor:
-    image: google/cadvisor:latest
-    restart: always
-    volumes:
-    - /:/rootfs:ro
-    - /var/run:/var/run:rw
-    - /sys:/sys:ro
-    - /var/lib/docker:/var/lib/docker:ro
-    - /dev/disk/:/dev/disk:ro
-    devices:
-      - /dev/kmsg:/dev/kmsg
-    networks:
-      - core
-
 volumes:
   prometheus-data:
   alertmanager-data:
   grafana-data:
   grafana-provisioning:
-  alertmanager-bot-data:
 
 networks:
   core:
