@@ -19,3 +19,16 @@ We use a swarm network that multiple stack can share. This is so that we can mon
 ```
 docker network create --driver=overlay --attachable core
 ```
+
+## Node exporter
+
+To export machine metrics we use [node-exporter](https://github.com/prometheus/node_exporter)
+
+```
+sudo apt install prometheus-node-exporter
+```
+
+Check that the service is running:
+```
+sudo service prometheus-node-exporter status
+```
