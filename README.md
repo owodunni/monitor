@@ -32,3 +32,20 @@ Check that the service is running:
 ```
 sudo service prometheus-node-exporter status
 ```
+
+## Grafana
+
+We should now have a running node_exporter and a grafana instance.
+
+Grafana can be accessed at:
+```
+http://gluteus:3000
+```
+
+Add prometheus as data source the address is:
+
+```
+http://prometheus:9090
+```
+
+Visualize node_exporter with [node_exporter dashboard](https://grafana.com/grafana/dashboards/1860)
